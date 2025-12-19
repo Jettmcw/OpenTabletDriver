@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using OpenTabletDriver.Configurations.Parsers.Wacom.Intuos4;
 using OpenTabletDriver.Plugin.Attributes;
 using OpenTabletDriver.Plugin.Output;
 using OpenTabletDriver.Plugin.Tablet;
+using OpenTabletDriver.Plugin.Tablet.Strip;
 using OpenTabletDriver.Plugin.Tablet.Wheel;
 
 #nullable enable
@@ -46,6 +46,8 @@ namespace OpenTabletDriver.Desktop.Binding
         private uint? lastWheelPosition;
         private float currentWheelDelta;
 
+        private uint? lastStripPosition;
+
         public event Action<IDeviceReport>? Emit;
 
         public void Consume(IDeviceReport report)
@@ -68,6 +70,8 @@ namespace OpenTabletDriver.Desktop.Binding
                 HandleWheelButtonReport(tablet, wheelButtonReport);
             if (report is IAbsoluteWheelReport absoluteWheelReport)
                 HandleAbsoluteWheelReport(tablet, absoluteWheelReport);
+            if (report is IAbsoluteStripReport absoluteStripReport)
+                HandleAbsoluteStripReport(tablet, absoluteStripReport);
             if (report is IRelativeWheelReport relativeWheelReport)
                 HandleRelativeWheelReport(tablet, relativeWheelReport, relativeWheelReport.Delta);
             if (report is OutOfRangeReport)
@@ -117,6 +121,22 @@ namespace OpenTabletDriver.Desktop.Binding
             int? delta = ComputeWheelDelta(lastWheelPosition, report.Position);
             HandleRelativeWheelReport(tablet, report, delta);
             lastWheelPosition = report.Position;
+        }
+
+        private void HandleAbsoluteStripReport(TabletReference tablet, IAbsoluteStripReport report)
+        {
+            if (lastStripPosition != null && report.Position != null)
+            {
+                float delta = (uint)lastStripPosition - (float)report.Position;
+
+                ClockwiseRotation?.Invoke(tablet, report, ref delta);
+                CounterClockwiseRotation?.Invoke(tablet, report, ref delta);
+
+                ClockwiseRotation?.Invoke(tablet, report, false);
+                CounterClockwiseRotation?.Invoke(tablet, report, false);
+            }
+
+            lastStripPosition = report.Position;
         }
 
         private void HandleRelativeWheelReport(TabletReference tablet, IDeviceReport report, int? delta)
