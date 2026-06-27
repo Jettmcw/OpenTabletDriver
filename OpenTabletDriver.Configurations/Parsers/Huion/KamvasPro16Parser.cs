@@ -12,7 +12,7 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
             return data[1] switch
             {
                 0xE0 => new UCLogicAuxReport(data),
-                // 0xF0 => new HuionStripReport(data),
+                0xF0 => new KamvasPro16StripReport(data),
                 _ => new GianoReport(data)
             };
         }
