@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
+using OpenTabletDriver.Configurations.Parsers.Huion;
 using OpenTabletDriver.Plugin;
 using OpenTabletDriver.Plugin.Attributes;
 using OpenTabletDriver.Plugin.Output;
@@ -47,6 +49,7 @@ namespace OpenTabletDriver.Desktop.Binding
             Emit?.Invoke(report);
         }
 
+
         public void HandleBinding(IDeviceReport report)
         {
             if (report is IEraserReport eraserReport)
@@ -65,6 +68,38 @@ namespace OpenTabletDriver.Desktop.Binding
                 HandleRelativeWheelReport(tablet, relativeWheelReport);
             if (report is OutOfRangeReport)
                 HandleOutOfRangeReport(tablet, report);
+            if (report is KamvasPro16StripReport stripReport)
+                HandleKamvasPro16StripReport(tablet, stripReport);
+
+        }
+
+        private uint? lastKamvasPro16StripPosition;
+        private void HandleKamvasPro16StripReport(TabletReference tablet, KamvasPro16StripReport report)
+        {
+            if (!Wheels.TryGetValue(0, out WheelBindings? wheel) || wheel == null)
+                return;
+
+            if (lastKamvasPro16StripPosition != null && report.Position != null)
+            {
+                float delta = (uint)lastKamvasPro16StripPosition - (float)report.Position;
+
+                switch (delta)
+                {
+                    case > 0:
+                        wheel.ClockwiseRotation?.Invoke(tablet, report, delta);
+                        wheel.CounterClockwiseRotation?.Reset();
+                        break;
+                    case < 0:
+                        wheel.CounterClockwiseRotation?.Invoke(tablet, report, delta);
+                        wheel.ClockwiseRotation?.Reset();
+                        break;
+                    case 0:
+                        wheel.Reset();
+                        break;
+                }
+            }
+
+            lastKamvasPro16StripPosition = report.Position;
         }
 
         private readonly HashSet<int> _triedRelativeWheels = [];
