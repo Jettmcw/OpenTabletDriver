@@ -91,6 +91,7 @@ namespace OpenTabletDriver.Console
             CreateCommand<string, float, float, float, float, float>(SetTabletArea, "Sets the tablet area"),
             CreateCommand<string, float, float, float>(SetSensitivity, "Sets the relative sensitivity"),
             CreateCommand<string, string, float>(SetTipBinding, "Sets the current tip binding"),
+            CreateCommand<string, string, int, bool>(SetWheelBinding, "Sets the current wheel bindings"),
             CreateCommand<string, string, int>(SetPenBinding, "Sets the current pen button bindings"),
             CreateCommand<string, string, int>(SetAuxBinding, "Sets the current express key bindings"),
             CreateCommand<string, int>(SetResetTime, "Sets the reset time in milliseconds"),

@@ -188,6 +188,25 @@ namespace OpenTabletDriver.Console
             });
         }
 
+        private static async Task SetWheelBinding(string tablet, string name, int index, bool clockwise)
+        {
+            await ModifyProfile(tablet, p =>
+            {
+                var binding = AppInfo.PluginManager.ConstructObject<IBinding>(name);
+                PluginSettingStore bindingSetting = new(binding);
+
+                var wheel = p.BindingSettings.WheelBindings[index];
+                if (clockwise)
+                {
+                    wheel.ClockwiseRotation = bindingSetting;
+                }
+                else
+                {
+                    wheel.CounterClockwiseRotation = bindingSetting;
+                }
+            });
+        }
+
         private static async Task SetPenBinding(string tablet, string name, int index)
         {
             await ModifyProfile(tablet, p =>
